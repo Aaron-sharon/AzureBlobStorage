@@ -1,0 +1,50 @@
+[
+  {
+    "ContainingType": "Azurite.Controllers.LogicController",
+    "Method": "DeleteFromBlob",
+    "RelativePath": "api/blob/delete/{blobName}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "blobName",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Azurite.Controllers.LogicController",
+    "Method": "ProcessInvoices",
+    "RelativePath": "api/blob/process-invoices",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Azurite.Controllers.LogicController",
+    "Method": "UploadToBlob",
+    "RelativePath": "api/blob/upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

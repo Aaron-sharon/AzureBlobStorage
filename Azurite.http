@@ -1,0 +1,6 @@
+@Azurite_HostAddress = http://localhost:5249
+
+GET {{Azurite_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

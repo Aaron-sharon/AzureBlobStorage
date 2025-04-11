@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "ho2YKi3ktUXcqifRNwEvm3DuaAvAzeknFXSJ4mVGYuk=",
+  "Source": "Azurite",
+  "BasePath": "_content/Azurite",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
