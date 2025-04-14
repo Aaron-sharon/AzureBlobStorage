@@ -1,10 +1,3 @@
-C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.csproj.AssemblyReference.cache
-C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.AssemblyInfoInputs.cache
-C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.AssemblyInfo.cs
-C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.csproj.CoreCompileInputs.cache
-C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\aasds\Desktop\Azurite\bin\Debug\net9.0\appsettings.Development.json
 C:\Users\aasds\Desktop\Azurite\bin\Debug\net9.0\appsettings.json
 C:\Users\aasds\Desktop\Azurite\bin\Debug\net9.0\__azurite_db_blob_extent__.json
@@ -32,6 +25,14 @@ C:\Users\aasds\Desktop\Azurite\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI
 C:\Users\aasds\Desktop\Azurite\bin\Debug\net9.0\System.ClientModel.dll
 C:\Users\aasds\Desktop\Azurite\bin\Debug\net9.0\System.IO.Hashing.dll
 C:\Users\aasds\Desktop\Azurite\bin\Debug\net9.0\System.Memory.Data.dll
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.csproj.AssemblyReference.cache
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.AssemblyInfoInputs.cache
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.AssemblyInfo.cs
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.csproj.CoreCompileInputs.cache
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\Azurite.sourcelink.json
 C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\scopedcss\bundle\Azurite.styles.css
 C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\staticwebassets.build.json
 C:\Users\aasds\Desktop\Azurite\obj\Debug\net9.0\staticwebassets.development.json

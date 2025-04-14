@@ -29,9 +29,16 @@ namespace Azurite.Controllers
             {
                 using var stream = file.OpenReadStream();
                 var createdFiles = await _xmlSplitterService.SplitAndStoreInvoicesAsync(stream);
+
+                // Send each blob name to queue
+                foreach (var blobName in createdFiles)
+                {
+                    await _queueService.SendMessageAsync(blobName);
+                }
+
                 return Ok(new
                 {
-                    Message = $"{createdFiles.Count} invoices processed",
+                    Message = $"{createdFiles.Count} invoices processed and queued",
                     Files = createdFiles
                 });
             }

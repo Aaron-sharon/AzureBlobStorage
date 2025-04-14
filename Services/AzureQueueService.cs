@@ -1,5 +1,6 @@
 ﻿
 using Azure.Storage.Queues;
+using Newtonsoft.Json;
 
 public class AzureQueueService
 {
@@ -13,10 +14,19 @@ public class AzureQueueService
         _queueServiceClient = new QueueServiceClient(connectionString);
     }
 
-    public async Task SendMessageAsync(string message)
+    public async Task SendMessageAsync(string blobName)
     {
         var queueClient = _queueServiceClient.GetQueueClient(_queueName);
         await queueClient.CreateIfNotExistsAsync();
-        await queueClient.SendMessageAsync(message);
+
+        var message = new
+        {
+            EventType = "NewInvoice",
+            BlobName = blobName,
+            Timestamp = DateTime.UtcNow
+        };
+
+        string jsonMessage = JsonConvert.SerializeObject(message);
+        await queueClient.SendMessageAsync(jsonMessage);
     }
 }
