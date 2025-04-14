@@ -1,1 +1,4 @@
 .vs/
+/bin/Debug/net9.0/Azurite.dll
+/bin/Debug/net9.0/Azurite.exe
+/obj/Debug/net9.0/EndpointInfo/Azurite.json
