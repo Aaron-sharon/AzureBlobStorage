@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Azurite")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2f366da31b185ae1c6eb88b0b8ad43a4d0213efe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+93a499f178d9bc615f4e862685cfaec946eb28e8")]
 [assembly: System.Reflection.AssemblyProductAttribute("Azurite")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Azurite")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

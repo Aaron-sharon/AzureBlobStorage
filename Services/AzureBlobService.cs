@@ -29,4 +29,17 @@ public class AzureBlobService
         var blobClient = containerClient.GetBlobClient(blobName);
         await blobClient.DeleteIfExistsAsync();
     }
+
+    public async Task CopyBlobAsync(string sourceBlobName, string destinationBlobName)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+        var sourceBlob = containerClient.GetBlobClient(sourceBlobName);
+        var destinationBlob = containerClient.GetBlobClient(destinationBlobName);
+
+        if (await sourceBlob.ExistsAsync())
+        {
+            await destinationBlob.StartCopyFromUriAsync(sourceBlob.Uri);
+        }
+    }
+
 }

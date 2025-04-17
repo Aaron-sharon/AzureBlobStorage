@@ -1,24 +1,22 @@
-﻿
-using Azure.Storage.Queues;
+﻿using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using Newtonsoft.Json;
 
 public class AzureQueueService
 {
-    private readonly QueueServiceClient _queueServiceClient;
-    private readonly string _queueName;
+    private readonly QueueClient _queueClient;
 
     public AzureQueueService(IConfiguration configuration)
     {
         var connectionString = configuration["AzureStorage:ConnectionString"];
-        _queueName = configuration["AzureStorage:QueueName"];
-        _queueServiceClient = new QueueServiceClient(connectionString);
+        var queueName = configuration["AzureStorage:QueueName"];
+
+        _queueClient = new QueueClient(connectionString, queueName);
+        _queueClient.CreateIfNotExists(); // Ensure the queue exists before use
     }
 
     public async Task SendMessageAsync(string blobName)
     {
-        var queueClient = _queueServiceClient.GetQueueClient(_queueName);
-        await queueClient.CreateIfNotExistsAsync();
-
         var message = new
         {
             EventType = "NewInvoice",
@@ -27,6 +25,17 @@ public class AzureQueueService
         };
 
         string jsonMessage = JsonConvert.SerializeObject(message);
-        await queueClient.SendMessageAsync(jsonMessage);
+        await _queueClient.SendMessageAsync(jsonMessage);
+    }
+
+    public async Task<List<QueueMessage>> ReceiveMessagesAsync(int maxMessages = 10)
+    {
+        var response = await _queueClient.ReceiveMessagesAsync(maxMessages, TimeSpan.FromMinutes(5));
+        return response.Value.ToList(); // Includes MessageId, PopReceipt, Body
+    }
+
+    public async Task DeleteMessageAsync(string messageId, string popReceipt)
+    {
+        await _queueClient.DeleteMessageAsync(messageId, popReceipt);
     }
 }

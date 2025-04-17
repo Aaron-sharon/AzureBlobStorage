@@ -7,6 +7,9 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<AzureBlobService>();
 builder.Services.AddScoped<AzureQueueService>();
 builder.Services.AddScoped<XmlSplitterService>();
+
+
+builder.Services.AddHostedService<InvoiceBatchProcessorService>();
 // Configure Swagger
 builder.Services.AddSwaggerGen(c =>
 {
