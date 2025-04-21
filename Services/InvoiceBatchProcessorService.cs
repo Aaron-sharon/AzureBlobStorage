@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Diagnostics;
+using Newtonsoft.Json;
 
 public class InvoiceBatchProcessorService : BackgroundService
 {
@@ -19,42 +20,59 @@ public class InvoiceBatchProcessorService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             using var scope = _scopeFactory.CreateScope();
-
             var queueService = scope.ServiceProvider.GetRequiredService<AzureQueueService>();
             var blobService = scope.ServiceProvider.GetRequiredService<AzureBlobService>();
 
-            var messages = await queueService.ReceiveMessagesAsync(10);
+            var allMessages = new List<Azure.Storage.Queues.Models.QueueMessage>();
+            const int maxBatchSize = 1000;
+            const int chunkSize = 32;
 
-            if (messages.Count == 10)
+            // Stopwatch for timing the entire batch
+            var stopwatch = Stopwatch.StartNew();
+
+            _logger.LogInformation("Starting to collect messages...");
+
+            // Receive messages in chunks
+            while (allMessages.Count < maxBatchSize && !stoppingToken.IsCancellationRequested)
+            {
+                var chunk = await queueService.ReceiveMessagesAsync(Math.Min(chunkSize, maxBatchSize - allMessages.Count));
+                if (chunk.Count == 0) break;
+
+                allMessages.AddRange(chunk);
+            }
+
+            if (allMessages.Count > 0)
             {
                 string folderName = $"invoice-group-{_groupCounter}";
-                _logger.LogInformation($"Processing {messages.Count} messages into folder {folderName}");
+                _logger.LogInformation($"Processing {allMessages.Count} messages into folder {folderName}");
 
-                foreach (var message in messages)
+                foreach (var message in allMessages)
                 {
                     var body = message.Body.ToString();
                     var blobRef = JsonConvert.DeserializeObject<BlobQueueMessage>(body);
 
+                    // Log and move
                     _logger.LogInformation($"Moving blob '{blobRef.BlobName}' to folder '{folderName}'");
 
-                    // Copy blob
                     await blobService.CopyBlobAsync(blobRef.BlobName, $"{folderName}/{blobRef.BlobName}");
-                    // Delete original blob
                     await blobService.DeleteFileAsync(blobRef.BlobName);
-                    // Delete queue message
                     await queueService.DeleteMessageAsync(message.MessageId, message.PopReceipt);
-
-                    _logger.LogInformation($"Processed blob: {blobRef.BlobName}");
                 }
 
+                _logger.LogInformation($"Batch processing complete for {allMessages.Count} messages.");
                 _groupCounter++;
-                // Fast retry after processing
+
+                stopwatch.Stop();
+                _logger.LogInformation($"Total time taken: {stopwatch.Elapsed.TotalSeconds:F2} seconds");
+
+                // Fast retry
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
             else
             {
-                // Nothing or not enough to process — wait longer
+                _logger.LogInformation("No messages found. Waiting before retry...");
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                stopwatch.Stop();
             }
         }
     }

@@ -19,6 +19,36 @@ namespace Azurite.Controllers
         }
 
 
+        //[HttpPost("process-invoices")]
+        //public async Task<IActionResult> ProcessInvoices(IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //        return BadRequest("No file uploaded");
+
+        //    try
+        //    {
+        //        using var stream = file.OpenReadStream();
+        //        var createdFiles = await _xmlSplitterService.SplitAndStoreInvoicesAsync(stream);
+
+        //        // Send each blob name to queue
+        //        foreach (var blobName in createdFiles)
+        //        {
+        //            await _queueService.SendMessageAsync(blobName);
+        //        }
+
+        //        return Ok(new
+        //        {
+        //            Message = $"{createdFiles.Count} invoices processed and queued",
+        //            Files = createdFiles
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"Error: {ex.Message}");
+        //    }
+        //}
+
+
         [HttpPost("process-invoices")]
         public async Task<IActionResult> ProcessInvoices(IFormFile file)
         {
@@ -27,19 +57,23 @@ namespace Azurite.Controllers
 
             try
             {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew(); // Start stopwatch
+
                 using var stream = file.OpenReadStream();
                 var createdFiles = await _xmlSplitterService.SplitAndStoreInvoicesAsync(stream);
 
-                // Send each blob name to queue
                 foreach (var blobName in createdFiles)
                 {
                     await _queueService.SendMessageAsync(blobName);
                 }
 
+                stopwatch.Stop(); // Stop stopwatch
+
                 return Ok(new
                 {
                     Message = $"{createdFiles.Count} invoices processed and queued",
-                    Files = createdFiles
+                    Files = createdFiles,
+                    TimeTakenSeconds = stopwatch.Elapsed.TotalSeconds.ToString("N2") + "s"
                 });
             }
             catch (Exception ex)
@@ -47,6 +81,7 @@ namespace Azurite.Controllers
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
+
 
         [HttpPost("upload")]
         public async Task<IActionResult> UploadToBlob(IFormFile file)
