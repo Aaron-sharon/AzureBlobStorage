@@ -60,12 +60,12 @@ namespace Azurite.Controllers
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew(); // Start stopwatch
 
                 using var stream = file.OpenReadStream();
-                var createdFiles = await _xmlSplitterService.SplitAndStoreInvoicesAsync(stream);
+                var createdFiles = await _xmlSplitterService.SplitAndStoreInvoicesAsync(stream); // Correct method name
 
-                foreach (var blobName in createdFiles)
-                {
-                    await _queueService.SendMessageAsync(blobName);
-                }
+                //foreach (var blobName in createdFiles)
+                //{
+                //    await _queueService.SendMessageAsync(blobName);
+                //}
 
                 stopwatch.Stop(); // Stop stopwatch
 
@@ -81,6 +81,7 @@ namespace Azurite.Controllers
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
+
 
 
         [HttpPost("upload")]
