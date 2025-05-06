@@ -59,8 +59,24 @@ public class InvoiceBatchProcessorService : BackgroundService
                 continue;
             }
 
-            string folderName = $"invoice-group-{_groupCounter}";
-            _logger.LogInformation($"Processing batch #{_groupCounter} with {allMessages.Count} messages");
+            // Extract {id}/{yyyy}/{MM}/{dd} from first blob reference
+            var firstMessage = JsonConvert.DeserializeObject<BlobQueueMessage>(allMessages[0].Body.ToString());
+            var segments = firstMessage.BlobName.Split('/');
+            if (segments.Length < 4)
+            {
+                _logger.LogError("Invalid blob path format in message.");
+                continue;
+            }
+
+
+            string year = segments[0];
+            string month = segments[1];
+            string day = segments[2];
+
+            string basePath = $"{year}/{month}/{day}";
+            string folderName = $"{basePath}/invoice-group-{_groupCounter}";
+
+            _logger.LogInformation($"Processing batch #{_groupCounter} with {allMessages.Count} messages into folder {folderName}");
 
             var traceEntries = new List<TraceEntry>();
 
@@ -75,15 +91,22 @@ public class InvoiceBatchProcessorService : BackgroundService
                     Timestamp = blobRef.Timestamp
                 });
 
-                await blobService.CopyBlobAsync(blobRef.BlobName, $"{folderName}/{blobRef.BlobName}");
+                await blobService.CopyBlobAsync(blobRef.BlobName, $"{folderName}/{Path.GetFileName(blobRef.BlobName)}");
                 await blobService.DeleteFileAsync(blobRef.BlobName);
                 await queueService.DeleteMessageAsync(message.MessageId, message.PopReceipt);
             }
 
-            // Write trace log to blob
+            var traceLog = new TraceLog
+            {
+                BatchId = _groupCounter,
+                TotalEntries = traceEntries.Count,
+                GeneratedAt = DateTime.UtcNow,
+                Entries = traceEntries
+            };
+
             var traceFileName = $"trace-batch-{_groupCounter:D5}.json";
             using var traceStream = new MemoryStream();
-            var traceJson = JsonConvert.SerializeObject(traceEntries, Formatting.Indented);
+            var traceJson = JsonConvert.SerializeObject(traceLog, Formatting.Indented);
             using (var writer = new StreamWriter(traceStream, leaveOpen: true))
             {
                 writer.Write(traceJson);
@@ -111,8 +134,8 @@ public class InvoiceBatchProcessorService : BackgroundService
         public string EventType { get; set; }
         public string BlobName { get; set; }
         public DateTime Timestamp { get; set; }
-
     }
+
     public class TraceLog
     {
         public int BatchId { get; set; }
@@ -120,5 +143,4 @@ public class InvoiceBatchProcessorService : BackgroundService
         public DateTime GeneratedAt { get; set; }
         public List<TraceEntry> Entries { get; set; }
     }
-
 }
