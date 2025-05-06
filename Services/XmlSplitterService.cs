@@ -51,7 +51,12 @@ public class XmlSplitterService
                 invoiceDoc.AppendChild(clonedInvoice);
 
                 // Generate filename and upload blob
-                string blobName = $"invoice-{counter}-{Guid.NewGuid():N}.xml";
+                DateTime now = DateTime.UtcNow;
+                string folderPath = $"{now:yyyy}/{now:MM}/{now:dd}/invoice-group-0";
+                string fileName = $"invoice-{counter}-{Guid.NewGuid():N}.xml";
+                string blobName = $"{folderPath}/{fileName}";
+
+
                 createdFiles.Add(blobName);
                 counter++;
 
