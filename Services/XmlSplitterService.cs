@@ -16,7 +16,7 @@ public class XmlSplitterService
     {
         var createdFiles = new List<string>();
         int counter = 0;
-        int batchNumber = 1;
+        int batchNumber = 0;
         List<string> currentBatchFiles = new List<string>();
         var batchStopwatch = new Stopwatch();
         batchStopwatch.Start();
@@ -35,14 +35,15 @@ public class XmlSplitterService
                     if (reader.IsStartElement() && reader.LocalName == "Invoice")
                     {
                         counter++;
+
+
                         DateTime now = DateTime.UtcNow;
-                        string folderPath = $"{now:yyyy}/{now:MM}/{now:dd}/invoice-group-0";
+                        string folderPath = $"{now.Year}/{now.Month}/{now.Day}/invoice-group-{batchNumber}";
                         string fileName = $"invoice-{counter}-{Guid.NewGuid():N}.xml";
                         string blobName = $"{folderPath}/{fileName}";
 
                         using (var memoryStream = new MemoryStream())
                         {
-                            // Configure XmlWriter with Async enabled
                             XmlWriterSettings writerSettings = new XmlWriterSettings
                             {
                                 Async = true,
