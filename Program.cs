@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,9 +7,11 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<AzureBlobService>();
 builder.Services.AddScoped<AzureQueueService>();
 builder.Services.AddScoped<XmlSplitterService>();
+builder.Services.AddSingleton<RedisService>();
 
+// Register the Background Service
+builder.Services.AddHostedService<RedisMessageProcessorService>();
 
-builder.Services.AddHostedService<InvoiceBatchProcessorService>();
 // Configure Swagger
 builder.Services.AddSwaggerGen(c =>
 {
@@ -30,7 +32,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "TestingApp API v1");
-        c.RoutePrefix = "swagger"; // Set Swagger UI at /swagger
+        c.RoutePrefix = "swagger";
     });
 }
 

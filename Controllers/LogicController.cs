@@ -1,6 +1,7 @@
 ﻿using System.Xml;
 using Microsoft.AspNetCore.Mvc;      // For ControllerBase, ApiController, Route, HttpPost, HttpDelete, IActionResult
 using Newtonsoft.Json;
+
 namespace Azurite.Controllers
 {
     [ApiController]
@@ -10,14 +11,46 @@ namespace Azurite.Controllers
         private readonly AzureBlobService _blobService;
         private readonly AzureQueueService _queueService;
         private readonly XmlSplitterService _xmlSplitterService;
+        private readonly RedisService _redisService;
+        private readonly ILogger<LogicController> _logger;
 
-        public LogicController(AzureBlobService blobService, AzureQueueService queueService, XmlSplitterService xmlSplitterService)
+        public LogicController(AzureBlobService blobService, AzureQueueService queueService, XmlSplitterService xmlSplitterService, RedisService redisService, ILogger<LogicController> logger)
         {
             _blobService = blobService;
             _queueService = queueService;
             _xmlSplitterService = xmlSplitterService;
+            _redisService = redisService;
+            _logger = logger;
         }
 
+        [HttpGet("enqueue")]
+        public async Task<IActionResult> EnqueueMessage(string queueName, string message)
+        {
+            var length = await _redisService.EnqueueAsync(queueName, message);
+            return Ok($"Message enqueued. Queue length: {length}");
+        }
+
+        [HttpGet("dequeue")]
+        public async Task<IActionResult> DequeueMessage(string queueName)
+        {
+            var message = await _redisService.DequeueAsync(queueName);
+            return Ok(message ?? "Queue is empty.");
+        }
+
+        [HttpGet("queue-length")]
+        public async Task<IActionResult> GetQueueLength(string queueName)
+        {
+            var length = await _redisService.GetQueueLengthAsync(queueName);
+            return Ok($"Queue length: {length}");
+        }
+
+        [HttpGet("test-redis")]
+        public async Task<IActionResult> TestRedis()
+        {
+            await _redisService.SetDataAsync("testKey", "Hello Redis!");
+            var data = await _redisService.GetDataAsync("testKey");
+            return Ok($"Stored Data: {data}");
+        }
 
         //[HttpPost("process-invoices")]
         //public async Task<IActionResult> ProcessInvoices(IFormFile file)
@@ -62,16 +95,17 @@ namespace Azurite.Controllers
                 using var stream = file.OpenReadStream();
                 var createdFiles = await _xmlSplitterService.SplitAndStoreInvoicesAsync(stream); // Correct method name
 
-                //foreach (var blobName in createdFiles)
-                //{
-                //    await _queueService.SendMessageAsync(blobName);
-                //}
+                // Enqueue each blob name to Redis instead of Azure Queue
+                foreach (var blobName in createdFiles)
+                {
+                    await _redisService.EnqueueAsync("invoiceQueue", blobName);
+                }
 
                 stopwatch.Stop(); // Stop stopwatch
 
                 return Ok(new
                 {
-                    Message = $"{createdFiles.Count} invoices processed and queued",
+                    Message = $"{createdFiles.Count} invoices processed and enqueued to Redis.",
                     Files = createdFiles,
                     TimeTakenSeconds = stopwatch.Elapsed.TotalSeconds.ToString("N2") + "s"
                 });
@@ -81,6 +115,7 @@ namespace Azurite.Controllers
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
+
 
 
 
