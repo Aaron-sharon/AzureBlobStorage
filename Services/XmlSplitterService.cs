@@ -1,5 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
+using System.Text;
 using System.Xml;
+
+
+
 
 public class XmlSplitterService
 {
@@ -23,10 +28,7 @@ public class XmlSplitterService
 
         try
         {
-            XmlReaderSettings readerSettings = new XmlReaderSettings
-            {
-                Async = true
-            };
+            XmlReaderSettings readerSettings = new XmlReaderSettings { Async = true };
 
             using (XmlReader reader = XmlReader.Create(xmlStream, readerSettings))
             {
@@ -35,50 +37,39 @@ public class XmlSplitterService
                     if (reader.IsStartElement() && reader.LocalName == "Invoice")
                     {
                         counter++;
-
-
                         DateTime now = DateTime.UtcNow;
                         string folderPath = $"{now.Year}/{now.Month}/{now.Day}/invoice-group-{batchNumber}";
-                        string fileName = $"invoice-{counter}-{Guid.NewGuid():N}.xml";
+                        string fileName = $"invoice-{counter}-{Guid.NewGuid():N}.json";
                         string blobName = $"{folderPath}/{fileName}";
 
-                        using (var memoryStream = new MemoryStream())
+                        using (var invoiceSubtree = reader.ReadSubtree())
                         {
-                            XmlWriterSettings writerSettings = new XmlWriterSettings
-                            {
-                                Async = true,
-                                Indent = true,
-                                Encoding = new System.Text.UTF8Encoding(false) // No BOM
-                            };
+                            invoiceSubtree.Read(); // Move to root element
+                            XmlDocument xmlDoc = new XmlDocument();
+                            xmlDoc.Load(invoiceSubtree);
 
-                            using (XmlWriter writer = XmlWriter.Create(memoryStream, writerSettings))
+                            string jsonContent = ConvertXmlToJson(xmlDoc);
+                            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonContent);
+
+                            using (var jsonStream = new MemoryStream(jsonBytes))
                             {
-                                await writer.WriteStartDocumentAsync();
-                                await writer.WriteNodeAsync(reader, true);
-                                await writer.WriteEndDocumentAsync();
-                                await writer.FlushAsync();
+                                await _blobService.UploadFileAsync(blobName, jsonStream);
                             }
 
-                            memoryStream.Position = 0;
-                            await _blobService.UploadFileAsync(blobName, memoryStream);
-                        }
+                            createdFiles.Add(blobName);
+                            currentBatchFiles.Add(blobName);
 
-                        createdFiles.Add(blobName);
-                        currentBatchFiles.Add(blobName);
-
-                        // Check for batch size (1000 invoices per batch)
-                        if (counter % 1000 == 0)
-                        {
-                            _logger.LogInformation($"Batch {batchNumber} completed. Time taken: {batchStopwatch.Elapsed.TotalSeconds:N2} seconds. Files: {currentBatchFiles.Count}");
-
-                            batchNumber++;
-                            currentBatchFiles.Clear();
-                            batchStopwatch.Restart();
+                            if (counter % 1000 == 0)
+                            {
+                                _logger.LogInformation($"Batch {batchNumber} completed. Time taken: {batchStopwatch.Elapsed.TotalSeconds:N2} seconds. Files: {currentBatchFiles.Count}");
+                                batchNumber++;
+                                currentBatchFiles.Clear();
+                                batchStopwatch.Restart();
+                            }
                         }
                     }
                 }
 
-                // Handle the remaining files in the last batch
                 if (currentBatchFiles.Count > 0)
                 {
                     _logger.LogInformation($"Final Batch {batchNumber} completed. Time taken: {batchStopwatch.Elapsed.TotalSeconds:N2} seconds. Files: {currentBatchFiles.Count}");
@@ -93,4 +84,126 @@ public class XmlSplitterService
 
         return createdFiles;
     }
+
+
+    private string ConvertXmlToJson(XmlDocument xmlDoc)
+    {
+        using var outputStream = new MemoryStream();
+        using var writer = new Utf8JsonWriter(outputStream, new JsonWriterOptions
+        {
+            Indented = true,
+            SkipValidation = true
+        });
+
+        using var xmlReader = XmlReader.Create(new StringReader(xmlDoc.OuterXml));
+        WriteInvoiceToJson(xmlReader, writer, GetInvoiceNumber(xmlDoc));
+
+        writer.Flush();
+        return Encoding.UTF8.GetString(outputStream.ToArray());
+    }
+
+    private string GetInvoiceNumber(XmlDocument xmlDoc)
+    {
+        var node = xmlDoc.SelectSingleNode("//InvoiceNumber");
+        return node?.InnerText?.Trim().Replace(" ", "_").Replace("/", "-") ?? "Unknown_Invoice";
+    }
+
+    private void WriteCustomerToJson(XmlReader reader, Utf8JsonWriter writer)
+    {
+        writer.WriteStartObject();
+        while (reader.Read())
+        {
+            if (reader.NodeType == XmlNodeType.Element && !reader.IsEmptyElement)
+            {
+                string elementName = reader.LocalName;
+                if (reader.Read() && reader.NodeType == XmlNodeType.Text)
+                {
+                    writer.WriteString(elementName, reader.Value.Trim());
+                }
+            }
+        }
+        writer.WriteEndObject();
+    }
+
+    private void WriteItemsToJson(XmlReader reader, Utf8JsonWriter writer)
+    {
+        writer.WriteStartArray();
+        while (reader.ReadToFollowing("Item"))
+        {
+            using var itemReader = reader.ReadSubtree();
+            itemReader.Read();
+            writer.WriteStartObject();
+
+            while (itemReader.Read())
+            {
+                if (itemReader.NodeType == XmlNodeType.Element && !itemReader.IsEmptyElement)
+                {
+                    string elementName = itemReader.LocalName;
+                    if (itemReader.Read() && itemReader.NodeType == XmlNodeType.Text)
+                    {
+                        writer.WriteString(elementName, itemReader.Value.Trim());
+                    }
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+        writer.WriteEndArray();
+    }
+
+    private void WriteInvoiceToJson(XmlReader reader, Utf8JsonWriter writer, string invoiceNumber)
+    {
+        writer.WriteStartObject();
+        writer.WriteString("InvoiceNumber", invoiceNumber);
+
+        while (reader.Read())
+        {
+            if (reader.NodeType == XmlNodeType.Element && !reader.IsEmptyElement)
+            {
+                string elementName = reader.LocalName;
+
+                if (elementName == "InvoiceNumber")
+                {
+                    reader.Skip();
+                    continue;
+                }
+
+                if (elementName == "Customer")
+                {
+                    writer.WritePropertyName(elementName);
+                    WriteCustomerToJson(reader.ReadSubtree(), writer);
+                    continue;
+                }
+
+                if (elementName == "Items")
+                {
+                    writer.WritePropertyName(elementName);
+                    WriteItemsToJson(reader.ReadSubtree(), writer);
+                    continue;
+                }
+
+                if (reader.Read() && reader.NodeType == XmlNodeType.Text)
+                {
+                    writer.WriteString(elementName, reader.Value.Trim());
+                }
+            }
+        }
+
+        writer.WriteEndObject();
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
