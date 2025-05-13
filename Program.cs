@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
 builder.Services.AddScoped<IAzureQueueService, AzureQueueService>();
-builder.Services.AddScoped<XmlSplitterService>();
+builder.Services.AddScoped<IXmlSplitterService, XmlSplitterService>();
 builder.Services.AddSingleton<RedisService>();
 
 // Register the Background Service

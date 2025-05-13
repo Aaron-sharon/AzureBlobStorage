@@ -1,4 +1,5 @@
 ﻿using System.Xml;
+using Azurite.Interface;
 using Microsoft.AspNetCore.Mvc;      // For ControllerBase, ApiController, Route, HttpPost, HttpDelete, IActionResult
 using Newtonsoft.Json;
 
@@ -8,13 +9,13 @@ namespace Azurite.Controllers
     [Route("api/blob")]
     public class LogicController : ControllerBase
     {
-        private readonly AzureBlobService _blobService;
-        private readonly AzureQueueService _queueService;
-        private readonly XmlSplitterService _xmlSplitterService;
+        private readonly IAzureBlobService _blobService;
+        private readonly IAzureQueueService _queueService;
+        private readonly IXmlSplitterService _xmlSplitterService;
         private readonly RedisService _redisService;
         private readonly ILogger<LogicController> _logger;
 
-        public LogicController(AzureBlobService blobService, AzureQueueService queueService, XmlSplitterService xmlSplitterService, RedisService redisService, ILogger<LogicController> logger)
+        public LogicController(IAzureBlobService blobService, IAzureQueueService queueService, IXmlSplitterService xmlSplitterService, RedisService redisService, ILogger<LogicController> logger)
         {
             _blobService = blobService;
             _queueService = queueService;

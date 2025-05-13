@@ -2,7 +2,7 @@
 using System.Xml;
 using Azurite.Interface;
 
-public class XmlSplitterService
+public class XmlSplitterService : IXmlSplitterService
 {
     private readonly IAzureBlobService _blobService;
     private readonly ILogger<XmlSplitterService> _logger;
