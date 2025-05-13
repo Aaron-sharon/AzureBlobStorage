@@ -50,7 +50,7 @@ public class InvoiceBatchProcessorService : BackgroundService
                 }
 
                 allMessages.AddRange(chunk);
-                idleWatch.Restart(); // Reset idle timer on message receive
+                idleWatch.Restart(); // Reset idle timer on message receiv
             }
 
             if (allMessages.Count == 0)
