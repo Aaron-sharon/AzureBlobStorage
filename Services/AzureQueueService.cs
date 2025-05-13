@@ -1,8 +1,9 @@
 ﻿using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
+using Azurite.Interface;
 using Newtonsoft.Json;
 
-public class AzureQueueService
+public class AzureQueueService : IAzureQueueService
 {
     private readonly QueueClient _queueClient;
     private readonly ILogger<AzureQueueService> _logger;

@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAzureBlobService, AzureBlobService>();
-builder.Services.AddScoped<AzureQueueService>();
+builder.Services.AddScoped<IAzureQueueService, AzureQueueService>();
 builder.Services.AddScoped<XmlSplitterService>();
 builder.Services.AddSingleton<RedisService>();
 
