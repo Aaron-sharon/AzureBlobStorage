@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Azurite.Interface;
 using Newtonsoft.Json;
 
 public class InvoiceBatchProcessorService : BackgroundService
@@ -23,7 +24,7 @@ public class InvoiceBatchProcessorService : BackgroundService
         {
             using var scope = _scopeFactory.CreateScope();
             var queueService = scope.ServiceProvider.GetRequiredService<AzureQueueService>();
-            var blobService = scope.ServiceProvider.GetRequiredService<AzureBlobService>();
+            var blobService = scope.ServiceProvider.GetRequiredService<IAzureBlobService>();
 
             var allMessages = new List<Azure.Storage.Queues.Models.QueueMessage>();
             var stopwatch = Stopwatch.StartNew();

@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
+using Azurite.Interface;
 
-public class AzureBlobService
+public class AzureBlobService : IAzureBlobService
 {
     private readonly BlobServiceClient _blobServiceClient;
     private readonly string _containerName;

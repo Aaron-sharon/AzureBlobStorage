@@ -1,12 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Xml;
+using Azurite.Interface;
 
 public class XmlSplitterService
 {
-    private readonly AzureBlobService _blobService;
+    private readonly IAzureBlobService _blobService;
     private readonly ILogger<XmlSplitterService> _logger;
 
-    public XmlSplitterService(AzureBlobService blobService, ILogger<XmlSplitterService> logger)
+    public XmlSplitterService(IAzureBlobService blobService, ILogger<XmlSplitterService> logger)
     {
         _blobService = blobService;
         _logger = logger;
@@ -16,7 +17,7 @@ public class XmlSplitterService
     {
         var createdFiles = new List<string>();
         int counter = 0;
-        int batchNumber = 0;
+        int batchNumber = 1;
         List<string> currentBatchFiles = new List<string>();
         var batchStopwatch = new Stopwatch();
         batchStopwatch.Start();
@@ -42,6 +43,7 @@ public class XmlSplitterService
                         string fileName = $"invoice-{counter}-{Guid.NewGuid():N}.xml";
                         string blobName = $"{folderPath}/{fileName}";
 
+                        //Writing the data to memory
                         using (var memoryStream = new MemoryStream())
                         {
                             XmlWriterSettings writerSettings = new XmlWriterSettings
@@ -62,7 +64,7 @@ public class XmlSplitterService
                             memoryStream.Position = 0;
                             await _blobService.UploadFileAsync(blobName, memoryStream);
                         }
-
+                        //We record the file path in both createdFiles (all envelopes) and currentBatchFiles (current box).
                         createdFiles.Add(blobName);
                         currentBatchFiles.Add(blobName);
 
